@@ -38,15 +38,22 @@ function computeDynamicStatus(flight, now) {
     const scheduledTime = new Date(flight.scheduledUtc);
     let estimatedTime = new Date(scheduledTime.getTime() + (flight.delayMinutes * 60000));
     
-    // Base object to return
+    // Calculate hours until the scheduled flight time
+    const hoursUntilScheduled = (scheduledTime - now) / (1000 * 60 * 60);
+    
+    // Realism tweak: Delays are only known within 4 hours of the flight. Cancellations within 24 hours.
+    const isVisiblyDelayed = flight.fate === 'DELAYED' && hoursUntilScheduled <= 4;
+    const isVisiblyCancelled = flight.fate === 'CANCELLED' && hoursUntilScheduled <= 24;
+
+    // Base object to return (defaults to Scheduled)
     const result = {
         flightLegStatus: 'SCH',
         flightLegStatusEnglish: 'Scheduled',
         flightLegStatusSwedish: 'Schemalagd',
-        estimatedUtc: flight.fate === 'DELAYED' ? estimatedTime.toISOString() : scheduledTime.toISOString()
+        estimatedUtc: isVisiblyDelayed ? estimatedTime.toISOString() : scheduledTime.toISOString()
     };
 
-    if (flight.fate === 'CANCELLED') {
+    if (isVisiblyCancelled) {
         result.flightLegStatus = 'CAN';
         result.flightLegStatusEnglish = 'Cancelled';
         result.flightLegStatusSwedish = 'Inställd';
@@ -68,7 +75,7 @@ function computeDynamicStatus(flight, now) {
             result.flightLegStatus = 'GTG';
             result.flightLegStatusEnglish = 'Go to gate';
             result.flightLegStatusSwedish = 'Gå till gate';
-        } else if (flight.fate === 'DELAYED') {
+        } else if (isVisiblyDelayed) {
             result.flightLegStatus = 'DEL';
             result.flightLegStatusEnglish = 'Delayed';
             result.flightLegStatusSwedish = 'Försenad';
@@ -79,7 +86,7 @@ function computeDynamicStatus(flight, now) {
             result.flightLegStatus = 'LAN';
             result.flightLegStatusEnglish = 'Landed';
             result.flightLegStatusSwedish = 'Landad';
-        } else if (flight.fate === 'DELAYED') {
+        } else if (isVisiblyDelayed) {
             result.flightLegStatus = 'DEL';
             result.flightLegStatusEnglish = 'Delayed';
             result.flightLegStatusSwedish = 'Försenad';
