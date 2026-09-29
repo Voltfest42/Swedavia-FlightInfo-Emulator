@@ -283,7 +283,7 @@
                 <div class="bp-row">
                     <div>
                         <div class="bp-label">Passenger Name</div>
-                        <div class="bp-value">JOHN DOE</div>
+                        <div class="bp-value" id="bp-name">JOHN DOE</div>
                     </div>
                     <div style="text-align: right;">
                         <div class="bp-label">Flight</div>
@@ -341,6 +341,9 @@
         function showBoardingPass(flightId) {
             const flight = currentFlights.find(f => f.flightId === flightId);
             if (!flight) return;
+
+            const names = ["JOHN DOE", "JANE DOE"];
+            document.getElementById('bp-name').innerText = names[Math.floor(Math.random() * names.length)];
 
             document.getElementById('bp-airline').innerText = flight.airlineOperator.name;
             document.getElementById('bp-flight').innerText = flight.flightId;
