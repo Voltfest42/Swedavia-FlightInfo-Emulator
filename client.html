@@ -131,6 +131,10 @@
 
         <input type="date" id="date-input">
         
+        <input type="time" id="time-start" onchange="renderFlights()" title="Start Time">
+        <span style="align-self: center; color: #aaa;">to</span>
+        <input type="time" id="time-end" onchange="renderFlights()" title="End Time">
+        
         <button onclick="fetchFlights()">Load Flights</button>
     </div>
 
@@ -229,11 +233,27 @@
         function renderFlights() {
             const tbody = document.getElementById('flights-body');
             const airlineFilter = document.getElementById('airline-select').value;
+            const timeStart = document.getElementById('time-start').value;
+            const timeEnd = document.getElementById('time-end').value;
             
             let flightsToRender = currentFlights;
             
             if (airlineFilter !== 'ALL') {
                 flightsToRender = flightsToRender.filter(f => f.airlineOperator.iata === airlineFilter);
+            }
+
+            if (timeStart || timeEnd) {
+                flightsToRender = flightsToRender.filter(f => {
+                    const timeObj = f.departureTime || f.arrivalTime;
+                    const date = new Date(timeObj.scheduledUtc);
+                    const hours = date.getHours().toString().padStart(2, '0');
+                    const minutes = date.getMinutes().toString().padStart(2, '0');
+                    const timeString = `${hours}:${minutes}`;
+                    
+                    if (timeStart && timeString < timeStart) return false;
+                    if (timeEnd && timeString > timeEnd) return false;
+                    return true;
+                });
             }
 
             if (flightsToRender.length === 0) {
