@@ -180,6 +180,47 @@
         tr.clickable:hover {
             background-color: #2a2a2a;
         }
+        /* Status Filter Dropdown */
+        details.status-filter {
+            position: relative;
+        }
+        details.status-filter summary {
+            padding: 8px 12px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            list-style: none;
+            user-select: none;
+        }
+        details.status-filter summary::-webkit-details-marker {
+            display: none;
+        }
+        details.status-filter .details-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #2d2d2d;
+            padding: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 150px;
+            margin-top: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+        }
+        details.status-filter .details-content label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -241,6 +282,19 @@
             <option value="Dubai">Dubai</option>
             <option value="Doha">Doha</option>
         </select>
+
+        <details class="status-filter">
+            <summary>Filter Status</summary>
+            <div class="details-content" id="status-checkboxes">
+                <label><input type="checkbox" value="Scheduled" checked onchange="renderFlights()"> Scheduled</label>
+                <label><input type="checkbox" value="Go to gate" checked onchange="renderFlights()"> Go to gate</label>
+                <label><input type="checkbox" value="Boarding" checked onchange="renderFlights()"> Boarding</label>
+                <label><input type="checkbox" value="Departed" checked onchange="renderFlights()"> Departed</label>
+                <label><input type="checkbox" value="Landed" checked onchange="renderFlights()"> Landed</label>
+                <label><input type="checkbox" value="Delayed" checked onchange="renderFlights()"> Delayed</label>
+                <label><input type="checkbox" value="Cancelled" checked onchange="renderFlights()"> Cancelled</label>
+            </div>
+        </details>
 
         <input type="date" id="date-input">
         
@@ -453,6 +507,9 @@
             const timeStart = document.getElementById('time-start').value;
             const timeEnd = document.getElementById('time-end').value;
             
+            // Get checked status values
+            const checkedStatuses = Array.from(document.querySelectorAll('#status-checkboxes input:checked')).map(cb => cb.value);
+
             let flightsToRender = currentFlights;
             
             if (airlineFilter !== 'ALL') {
@@ -478,6 +535,13 @@
                     if (timeEnd && timeString > timeEnd) return false;
                     return true;
                 });
+            }
+
+            // Filter by selected statuses
+            if (checkedStatuses.length === 0) {
+                flightsToRender = []; // nothing checked
+            } else {
+                flightsToRender = flightsToRender.filter(f => checkedStatuses.includes(f.locationAndStatus.flightLegStatusEnglish));
             }
 
             if (flightsToRender.length === 0) {
