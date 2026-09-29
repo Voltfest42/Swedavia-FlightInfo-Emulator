@@ -5,7 +5,7 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 
-// Helper to load flights dynamically so we don't have to restart the server if data changes
+// Helper to load flights dynamically
 function loadFlights() {
     try {
         return JSON.parse(fs.readFileSync('mock_flights.json', 'utf8'));
@@ -15,44 +15,103 @@ function loadFlights() {
     }
 }
 
+// Helper to calculate dynamic status based on real-world time
+function computeDynamicStatus(flight, now) {
+    const scheduledTime = new Date(flight.scheduledUtc);
+    let estimatedTime = new Date(scheduledTime.getTime() + (flight.delayMinutes * 60000));
+    
+    // Base object to return
+    const result = {
+        flightLegStatus: 'SCH',
+        flightLegStatusEnglish: 'Scheduled',
+        flightLegStatusSwedish: 'Schemalagd',
+        estimatedUtc: flight.fate === 'DELAYED' ? estimatedTime.toISOString() : scheduledTime.toISOString()
+    };
+
+    if (flight.fate === 'CANCELLED') {
+        result.flightLegStatus = 'CAN';
+        result.flightLegStatusEnglish = 'Cancelled';
+        result.flightLegStatusSwedish = 'Inställd';
+        return result;
+    }
+
+    const diffMinutes = (now - estimatedTime) / 60000;
+
+    if (flight.type === 'DEPARTURE') {
+        if (diffMinutes >= 0) {
+            result.flightLegStatus = 'DEP';
+            result.flightLegStatusEnglish = 'Departed';
+            result.flightLegStatusSwedish = 'Avgått';
+        } else if (diffMinutes >= -30) { // 30 mins before departure
+            result.flightLegStatus = 'BRD';
+            result.flightLegStatusEnglish = 'Boarding';
+            result.flightLegStatusSwedish = 'Ombordstigning';
+        } else if (diffMinutes >= -60) { // 60 mins before departure
+            result.flightLegStatus = 'GTG';
+            result.flightLegStatusEnglish = 'Go to gate';
+            result.flightLegStatusSwedish = 'Gå till gate';
+        } else if (flight.fate === 'DELAYED') {
+            result.flightLegStatus = 'DEL';
+            result.flightLegStatusEnglish = 'Delayed';
+            result.flightLegStatusSwedish = 'Försenad';
+        }
+    } else {
+        // ARRIVAL
+        if (diffMinutes >= 0) {
+            result.flightLegStatus = 'LAN';
+            result.flightLegStatusEnglish = 'Landed';
+            result.flightLegStatusSwedish = 'Landad';
+        } else if (flight.fate === 'DELAYED') {
+            result.flightLegStatus = 'DEL';
+            result.flightLegStatusEnglish = 'Delayed';
+            result.flightLegStatusSwedish = 'Försenad';
+        }
+    }
+
+    return result;
+}
+
 // 1. Departures Endpoint
 app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
     const { airportIATA, date } = req.params;
     const allFlights = loadFlights();
+    const now = new Date();
     
-    // Filter flights for this airport, date, and type
     const flights = allFlights.filter(f => 
         f.airport.toUpperCase() === airportIATA.toUpperCase() && 
         f.date === date && 
         f.type === 'DEPARTURE'
     );
 
-    // Map to FlightInfoV2 Departures schema
     const response = {
         from: {
             departureAirportIata: airportIATA.toUpperCase(),
             flightDepartureDate: date
         },
         numberOfFlights: flights.length,
-        flights: flights.map(f => ({
-            flightId: f.flightId,
-            arrivalAirportSwedish: f.otherAirportSwedish,
-            arrivalAirportEnglish: f.otherAirportEnglish,
-            airlineOperator: f.airlineOperator,
-            departureTime: {
-                scheduledUtc: f.scheduledUtc,
-                estimatedUtc: f.scheduledUtc, // Simplification for mock
-                actualUtc: null
-            },
-            locationAndStatus: {
-                terminal: f.terminal,
-                gate: f.gate,
-                flightLegStatus: 'SCH',
-                flightLegStatusEnglish: 'Scheduled',
-                flightLegStatusSwedish: 'Schemalagd'
-            },
-            diIndicator: 'I' // International
-        }))
+        flights: flights.map(f => {
+            const statusInfo = computeDynamicStatus(f, now);
+            
+            return {
+                flightId: f.flightId,
+                arrivalAirportSwedish: f.otherAirportSwedish,
+                arrivalAirportEnglish: f.otherAirportEnglish,
+                airlineOperator: f.airlineOperator,
+                departureTime: {
+                    scheduledUtc: f.scheduledUtc,
+                    estimatedUtc: statusInfo.estimatedUtc,
+                    actualUtc: null
+                },
+                locationAndStatus: {
+                    terminal: f.terminal,
+                    gate: statusInfo.flightLegStatus === 'CAN' ? '-' : f.gate,
+                    flightLegStatus: statusInfo.flightLegStatus,
+                    flightLegStatusEnglish: statusInfo.flightLegStatusEnglish,
+                    flightLegStatusSwedish: statusInfo.flightLegStatusSwedish
+                },
+                diIndicator: 'I' 
+            };
+        })
     };
 
     res.json(response);
@@ -62,47 +121,49 @@ app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
 app.get('/flightinfo/v2/:airportIATA/Arrivals/:date', (req, res) => {
     const { airportIATA, date } = req.params;
     const allFlights = loadFlights();
+    const now = new Date();
     
-    // Filter flights for this airport, date, and type
     const flights = allFlights.filter(f => 
         f.airport.toUpperCase() === airportIATA.toUpperCase() && 
         f.date === date && 
         f.type === 'ARRIVAL'
     );
 
-    // Map to FlightInfoV2 Arrivals schema
     const response = {
         to: {
             arrivalAirportIata: airportIATA.toUpperCase(),
             flightArrivalDate: date
         },
         numberOfFlights: flights.length,
-        flights: flights.map(f => ({
-            flightId: f.flightId,
-            departureAirportSwedish: f.otherAirportSwedish,
-            departureAirportEnglish: f.otherAirportEnglish,
-            airlineOperator: f.airlineOperator,
-            arrivalTime: {
-                scheduledUtc: f.scheduledUtc,
-                estimatedUtc: f.scheduledUtc, // Simplification for mock
-                actualUtc: null
-            },
-            locationAndStatus: {
-                terminal: f.terminal,
-                gate: f.gate,
-                flightLegStatus: 'SCH',
-                flightLegStatusEnglish: 'Scheduled',
-                flightLegStatusSwedish: 'Schemalagd'
-            },
-            diIndicator: 'I'
-        }))
+        flights: flights.map(f => {
+            const statusInfo = computeDynamicStatus(f, now);
+            
+            return {
+                flightId: f.flightId,
+                departureAirportSwedish: f.otherAirportSwedish,
+                departureAirportEnglish: f.otherAirportEnglish,
+                airlineOperator: f.airlineOperator,
+                arrivalTime: {
+                    scheduledUtc: f.scheduledUtc,
+                    estimatedUtc: statusInfo.estimatedUtc,
+                    actualUtc: null
+                },
+                locationAndStatus: {
+                    terminal: f.terminal,
+                    gate: statusInfo.flightLegStatus === 'CAN' ? '-' : f.gate,
+                    flightLegStatus: statusInfo.flightLegStatus,
+                    flightLegStatusEnglish: statusInfo.flightLegStatusEnglish,
+                    flightLegStatusSwedish: statusInfo.flightLegStatusSwedish
+                },
+                diIndicator: 'I'
+            };
+        })
     };
 
     res.json(response);
 });
 
 // 3. HeartBeat Emulator
-// The Swedavia API uses this for liveness checks. Since it returns a generic 200 OK object, we emulate that here.
 app.get('/flightinfo/v2/HeartBeat', (req, res) => {
     res.status(200).json({});
 });

@@ -134,6 +134,20 @@ function generateFlights() {
                 const gatePrefix = terminal === '5' ? 'F' : (terminal === '4' ? 'C' : (terminal === '2' ? '6' : '1'));
                 const gate = `${gatePrefix}${Math.floor(Math.random() * 10) + 1}`;
 
+                // --- Real-world Fates & Irregularities ---
+                // Statistics: ~2% Cancelled, ~13% Delayed, ~85% On Time
+                const fateStrand = Math.random();
+                let fate = 'ON_TIME';
+                let delayMinutes = 0;
+                
+                if (fateStrand < 0.02) {
+                    fate = 'CANCELLED';
+                } else if (fateStrand < 0.15) {
+                    fate = 'DELAYED';
+                    // Random delay between 15 mins and 2.5 hours
+                    delayMinutes = 15 + Math.floor(Math.random() * 135);
+                }
+
                 const flight = {
                     flightId,
                     type: isDeparture ? 'DEPARTURE' : 'ARRIVAL',
@@ -145,7 +159,9 @@ function generateFlights() {
                     airlineOperator: airline,
                     otherAirportIata: otherAirport.iata,
                     otherAirportSwedish: otherAirport.swedish,
-                    otherAirportEnglish: otherAirport.english
+                    otherAirportEnglish: otherAirport.english,
+                    fate, // 'ON_TIME', 'DELAYED', 'CANCELLED'
+                    delayMinutes
                 };
                 
                 flights.push(flight);
