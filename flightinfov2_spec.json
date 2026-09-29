@@ -1,0 +1,620 @@
+{
+  "metadata": {
+    "id": "6a2a4f8f217d201928361503",
+    "contentType": "application/vnd.oai.openapi.components+json",
+    "document": {
+      "components": {
+        "schemas": {
+          "departures": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "$ref": "#/components/schemas/from"
+              },
+              "numberOfFlights": {
+                "type": "integer",
+                "description": "Number of flights in response",
+                "format": "int32"
+              },
+              "flights": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/departureFlight"
+                },
+                "description": "A list with one or more flights",
+                "xml": {
+                  "wrapped": true
+                }
+              }
+            }
+          },
+          "from": {
+            "type": "object",
+            "properties": {
+              "departureAirportIata": {
+                "type": "string",
+                "description": "Iata code for depature airport"
+              },
+              "departureAirportIcao": {
+                "type": "string",
+                "description": "Icao code for departure airport"
+              },
+              "departureAirportSwedish": {
+                "type": "string",
+                "description": "Departure airport in swedish"
+              },
+              "departureAirportEnglish": {
+                "type": "string",
+                "description": "Departure airport in english"
+              },
+              "flightDepartureDate": {
+                "type": "string",
+                "description": "Departure date in UTC"
+              }
+            }
+          },
+          "departureFlight": {
+            "type": "object",
+            "properties": {
+              "flightId": {
+                "type": "string",
+                "description": "Flight number"
+              },
+              "arrivalAirportSwedish": {
+                "type": "string",
+                "description": "Arrival airport in Swedish."
+              },
+              "arrivalAirportEnglish": {
+                "type": "string",
+                "description": "Arrival airport in English."
+              },
+              "airlineOperator": {
+                "$ref": "#/components/schemas/airlineOperator"
+              },
+              "departureTime": {
+                "$ref": "#/components/schemas/departureTime"
+              },
+              "locationAndStatus": {
+                "$ref": "#/components/schemas/departureLocationAndStatus"
+              },
+              "checkIn": {
+                "$ref": "#/components/schemas/checkIn"
+              },
+              "codeShareData": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "xml": {
+                    "name": "flightId"
+                  }
+                },
+                "description": "Alternate flightId",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "flightLegIdentifier": {
+                "$ref": "#/components/schemas/flightLegIdentifier"
+              },
+              "viaDestinations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/viaDestination"
+                },
+                "description": "A list of airports a flight will land on the way to the (final) destination airport",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "remarksEnglish": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/remark"
+                },
+                "description": "Remarks intended for FIDS screens in English",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "remarksSwedish": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/remark"
+                },
+                "description": "Remarks intended for FIDS screens in Swedish",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "diIndicator": {
+                "type": "string",
+                "description": "Indicator showing if the flight is domestic (D), international (I) or Schengen (S)."
+              }
+            }
+          },
+          "airlineOperator": {
+            "type": "object",
+            "properties": {
+              "iata": {
+                "type": "string",
+                "description": "The iata code of the party operating the flight"
+              },
+              "icao": {
+                "type": "string",
+                "description": "The iata code of the party operating the flight"
+              },
+              "name": {
+                "type": "string",
+                "description": "The party operating the flight"
+              }
+            }
+          },
+          "departureTime": {
+            "type": "object",
+            "properties": {
+              "scheduledUtc": {
+                "type": "string",
+                "description": "Scheduled time of departure in UTC",
+                "format": "date-time"
+              },
+              "estimatedUtc": {
+                "type": "string",
+                "description": "Estimated time of departure in UTC",
+                "format": "date-time"
+              },
+              "actualUtc": {
+                "type": "string",
+                "description": "Actual time of departure in UTC",
+                "format": "date-time"
+              }
+            }
+          },
+          "departureLocationAndStatus": {
+            "type": "object",
+            "properties": {
+              "terminal": {
+                "type": "string",
+                "description": "Terminal identifier"
+              },
+              "gate": {
+                "type": "string",
+                "description": "Uniquely defines one gate at the airport."
+              },
+              "gateAction": {
+                "type": "string",
+                "description": "The stage in the boarding. Open O or Closed C."
+              },
+              "gateActionSwedish": {
+                "type": "string",
+                "description": "Gate stage in Swedish"
+              },
+              "gateActionEnglish": {
+                "type": "string",
+                "description": "Gate stage in English"
+              },
+              "gateOpenUtc": {
+                "type": "string",
+                "description": "The UTC time at which the gate is opened for passenger processing",
+                "format": "date-time"
+              },
+              "gateCloseUtc": {
+                "type": "string",
+                "description": "The UTC time at which the gate is closed for passenger processing.",
+                "format": "date-time"
+              },
+              "flightLegStatus": {
+                "type": "string",
+                "description": "The status of a FlightLeg"
+              },
+              "flightLegStatusSwedish": {
+                "type": "string",
+                "description": "Status in Swedish"
+              },
+              "flightLegStatusEnglish": {
+                "type": "string",
+                "description": "Status in English"
+              }
+            }
+          },
+          "checkIn": {
+            "type": "object",
+            "properties": {
+              "checkInStatus": {
+                "type": "string",
+                "description": "The check in status. Open O or Closed C"
+              },
+              "checkInStatusSwedish": {
+                "type": "string",
+                "description": "Check in status in Swedish."
+              },
+              "checkInStatusEnglish": {
+                "type": "string",
+                "description": "Check in status in English."
+              },
+              "checkInDeskFrom": {
+                "type": "integer",
+                "description": "The first check in desk code",
+                "format": "int32"
+              },
+              "checkInDeskTo": {
+                "type": "integer",
+                "description": "The last check in desk code",
+                "format": "int32"
+              }
+            }
+          },
+          "flightLegIdentifier": {
+            "type": "object",
+            "properties": {
+              "ifplId": {
+                "type": "string",
+                "description": "Initial Flight plan Identifier"
+              },
+              "callsign": {
+                "type": "string",
+                "description": "Uniquely identifies an aircraft using the airspace around an airport"
+              },
+              "aircraftRegistration": {
+                "type": "string",
+                "description": "Unique aircraft identifier"
+              },
+              "ssrCode": {
+                "type": "string",
+                "description": "Secondary Surveillance Radar Code"
+              },
+              "flightId": {
+                "type": "string",
+                "description": "Flight number"
+              },
+              "flightDepartureDateUtc": {
+                "type": "string",
+                "description": "Departure date in Utc",
+                "format": "date-time"
+              },
+              "departureAirportIata": {
+                "type": "string",
+                "description": "Departure airport Iata code"
+              },
+              "arrivalAirportIata": {
+                "type": "string",
+                "description": "Arrival airport Iata code"
+              },
+              "departureAirportIcao": {
+                "type": "string",
+                "description": "Departure airport Icao"
+              },
+              "arrivalAirportIcao": {
+                "type": "string",
+                "description": "Arrival airport Icao"
+              }
+            }
+          },
+          "viaDestination": {
+            "type": "object",
+            "properties": {
+              "airportIATA": {
+                "type": "string"
+              },
+              "airportSwedish": {
+                "type": "string"
+              },
+              "airportEnglish": {
+                "type": "string"
+              }
+            }
+          },
+          "remark": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "indicator": {
+                "type": "string"
+              }
+            }
+          },
+          "arrivals": {
+            "type": "object",
+            "properties": {
+              "to": {
+                "$ref": "#/components/schemas/to"
+              },
+              "numberOfFlights": {
+                "type": "integer",
+                "description": "Number of flights in response",
+                "format": "int32"
+              },
+              "flights": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/arrivalFlight"
+                },
+                "description": "A list with zero or more flights",
+                "xml": {
+                  "wrapped": true
+                }
+              }
+            }
+          },
+          "to": {
+            "type": "object",
+            "properties": {
+              "arrivalAirportIata": {
+                "type": "string",
+                "description": "Iata code for arrival airport"
+              },
+              "arrivalAirportIcao": {
+                "type": "string",
+                "description": "Icao code for arrival airport"
+              },
+              "arrivalAirportSwedish": {
+                "type": "string",
+                "description": "Arrival airport name in Swedish"
+              },
+              "arrivalAirportEnglish": {
+                "type": "string",
+                "description": "Arrival airport name in English"
+              },
+              "flightArrivalDate": {
+                "type": "string",
+                "description": "Arrival date in UTC"
+              }
+            }
+          },
+          "arrivalFlight": {
+            "type": "object",
+            "properties": {
+              "flightId": {
+                "type": "string",
+                "description": "Flight number"
+              },
+              "departureAirportSwedish": {
+                "type": "string",
+                "description": "Departure airport name in Swedish"
+              },
+              "departureAirportEnglish": {
+                "type": "string",
+                "description": "Departure airport name in English"
+              },
+              "airlineOperator": {
+                "$ref": "#/components/schemas/airlineOperator"
+              },
+              "arrivalTime": {
+                "$ref": "#/components/schemas/arrivalTime"
+              },
+              "locationAndStatus": {
+                "$ref": "#/components/schemas/arrivalLocationAndStatus"
+              },
+              "baggage": {
+                "$ref": "#/components/schemas/baggage"
+              },
+              "codeShareData": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "xml": {
+                    "name": "flightId"
+                  }
+                },
+                "description": "Alternate flightId",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "flightLegIdentifier": {
+                "$ref": "#/components/schemas/flightLegIdentifier"
+              },
+              "remarksEnglish": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/remark"
+                },
+                "description": "Remarks intended for FIDS screens in English",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "remarksSwedish": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/remark"
+                },
+                "description": "Remarks intended for FIDS screens in Swedish",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "viaDestinations": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/viaDestination"
+                },
+                "description": "A list of airports a flight will land on the way to the (final) destination airport",
+                "xml": {
+                  "wrapped": true
+                }
+              },
+              "diIndicator": {
+                "type": "string",
+                "description": "Indicator showing if the flight is domestic (D), international (I) or Schengen (S)."
+              }
+            }
+          },
+          "arrivalTime": {
+            "type": "object",
+            "properties": {
+              "scheduledUtc": {
+                "type": "string",
+                "description": "Scheduled time of arrival in UTC",
+                "format": "date-time"
+              },
+              "estimatedUtc": {
+                "type": "string",
+                "description": "Estimated time of arrival in UTC",
+                "format": "date-time"
+              },
+              "actualUtc": {
+                "type": "string",
+                "description": "Actual time of arrival in UTC",
+                "format": "date-time"
+              }
+            }
+          },
+          "arrivalLocationAndStatus": {
+            "type": "object",
+            "properties": {
+              "terminal": {
+                "type": "string",
+                "description": "Terminal identifier"
+              },
+              "gate": {
+                "type": "string",
+                "description": "Uniquely defines one gate at the airport."
+              },
+              "flightLegStatus": {
+                "enum": [
+                  "SCH",
+                  "FPL",
+                  "FLS",
+                  "SEQ",
+                  "ACT",
+                  "CAN",
+                  "LAN",
+                  "RER",
+                  "DIV",
+                  "DEL"
+                ],
+                "type": "string",
+                "description": "The status of a FlightLeg."
+              },
+              "flightLegStatusSwedish": {
+                "type": "string",
+                "description": "Status text in Swedish"
+              },
+              "flightLegStatusEnglish": {
+                "type": "string",
+                "description": "Status text in English"
+              }
+            }
+          },
+          "baggage": {
+            "type": "object",
+            "properties": {
+              "estimatedFirstBagUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "baggageClaimUnit": {
+                "type": "string",
+                "description": "Baggage belt"
+              },
+              "firstBagUtc": {
+                "type": "string",
+                "description": "UTC time for first bag on baggage belt",
+                "format": "date-time"
+              },
+              "lastBagUtc": {
+                "type": "string",
+                "description": "UTC time for last bag on baggage belt",
+                "format": "date-time"
+              }
+            }
+          },
+          "flightsResponse": {
+            "type": "object",
+            "properties": {
+              "flights": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/flight"
+                }
+              },
+              "continuationtoken": {
+                "type": "string"
+              }
+            }
+          },
+          "flight": {
+            "type": "object",
+            "properties": {
+              "arrival": {
+                "$ref": "#/components/schemas/arrivalFlight"
+              },
+              "departure": {
+                "$ref": "#/components/schemas/departureFlight"
+              },
+              "scheduledDate": {
+                "type": "string"
+              }
+            }
+          },
+          "HeartBeatGet200ApplicationJsonResponse": {
+            "type": "object"
+          },
+          "airportIATA-Departures-date-GetRequest": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "airportIATA-Departures-date-GetRequest-1": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "airportIATA-Departures-date-GetRequest-2": {
+            "type": "string",
+            "default": "application/json",
+            "x-apim-inline": true
+          },
+          "airportIATA-Arrivals-date-GetRequest": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "airportIATA-Arrivals-date-GetRequest-1": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "airportIATA-Arrivals-date-GetRequest-2": {
+            "type": "string",
+            "default": "application/json",
+            "x-apim-inline": true
+          },
+          "QueryGetRequest": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "QueryGetRequest-1": {
+            "type": "string",
+            "x-apim-inline": true
+          },
+          "QueryGetRequest-2": {
+            "type": "integer",
+            "x-apim-inline": true
+          },
+          "QueryGetRequest-3": {
+            "type": "string",
+            "default": "application/json",
+            "x-apim-inline": true
+          },
+          "HeartBeatGetRequest": {
+            "type": "integer",
+            "x-apim-inline": true
+          },
+          "HeartBeatGetRequest-1": {
+            "type": "string",
+            "default": "application/json",
+            "x-apim-inline": true
+          }
+        }
+      }
+    }
+  },
+  "operations": {
+    "value": [
+      {
+        "id": "FlightInfo",
+        "name": "FlightInfo"
+      }
+    ],
+    "nextLink": null
+  }
+}

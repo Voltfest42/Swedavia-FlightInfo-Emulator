@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Swedavia FlightInfoV2 Client</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 15px;
+            background-color: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        select, input, button {
+            padding: 8px 12px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #0078D4;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        .heartbeat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: red;
+        }
+        .dot.online {
+            background-color: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+        th {
+            background-color: #2d2d2d;
+            color: #aaa;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        tr:hover {
+            background-color: #252525;
+        }
+        .airline-logo {
+            font-weight: bold;
+            color: #FFB900;
+        }
+        .status {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>FIDS (Flight Information Display System)</h2>
+        <div class="heartbeat">
+            <div id="heartbeat-dot" class="dot"></div>
+            <span id="heartbeat-text">Server Offline</span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <select id="airport-select">
+            <option value="ARN">Stockholm Arlanda (ARN)</option>
+            <option value="GOT">Göteborg Landvetter (GOT)</option>
+            <option value="BMA">Bromma Stockholm (BMA)</option>
+        </select>
+        
+        <select id="direction-select">
+            <option value="Departures">Departures</option>
+            <option value="Arrivals">Arrivals</option>
+        </select>
+
+        <input type="date" id="date-input">
+        
+        <button onclick="fetchFlights()">Load Flights</button>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Flight</th>
+                <th>Airline</th>
+                <th id="destination-header">Destination</th>
+                <th>Terminal</th>
+                <th>Gate</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="flights-body">
+            <tr>
+                <td colspan="7" style="text-align: center; color: #777;">Select parameters and click Load Flights</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/flightinfo/v2';
+
+        // Set default date to today
+        document.getElementById('date-input').valueAsDate = new Date();
+
+        // 1. Heartbeat Polling
+        async function checkHeartbeat() {
+            try {
+                const res = await fetch(`${API_BASE}/HeartBeat`);
+                if (res.ok) {
+                    document.getElementById('heartbeat-dot').classList.add('online');
+                    document.getElementById('heartbeat-text').innerText = 'API Connected';
+                } else {
+                    throw new Error('Bad response');
+                }
+            } catch (err) {
+                document.getElementById('heartbeat-dot').classList.remove('online');
+                document.getElementById('heartbeat-text').innerText = 'API Offline';
+            }
+        }
+
+        // Check heartbeat every 5 seconds
+        setInterval(checkHeartbeat, 5000);
+        checkHeartbeat(); // initial check
+
+        // 2. Fetch and render flights
+        async function fetchFlights() {
+            const airport = document.getElementById('airport-select').value;
+            const direction = document.getElementById('direction-select').value;
+            const date = document.getElementById('date-input').value;
+
+            const tbody = document.getElementById('flights-body');
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">Loading...</td></tr>';
+
+            // Update table header based on direction
+            document.getElementById('destination-header').innerText = direction === 'Departures' ? 'Destination' : 'Origin';
+
+            try {
+                const response = await fetch(`${API_BASE}/${airport}/${direction}/${date}`);
+                if (!response.ok) throw new Error('Failed to fetch data');
+                
+                const data = await response.json();
+                
+                // Sort flights by time
+                const flights = data.flights.sort((a, b) => {
+                    const timeA = a.departureTime ? a.departureTime.scheduledUtc : a.arrivalTime.scheduledUtc;
+                    const timeB = b.departureTime ? b.departureTime.scheduledUtc : b.arrivalTime.scheduledUtc;
+                    return new Date(timeA) - new Date(timeB);
+                });
+
+                if (flights.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No flights found for this date.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = flights.map(f => {
+                    const timeObj = f.departureTime || f.arrivalTime;
+                    const time = new Date(timeObj.scheduledUtc).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                    
+                    const city = f.arrivalAirportEnglish || f.departureAirportEnglish || 'Unknown';
+                    const airline = f.airlineOperator.name;
+                    const terminal = f.locationAndStatus.terminal || '-';
+                    const gate = f.locationAndStatus.gate || '-';
+                    const status = f.locationAndStatus.flightLegStatusEnglish;
+
+                    return `
+                        <tr>
+                            <td style="font-size: 18px; font-weight: bold;">${time}</td>
+                            <td>${f.flightId}</td>
+                            <td class="airline-logo">${airline}</td>
+                            <td style="font-size: 16px;">${city}</td>
+                            <td>T${terminal}</td>
+                            <td style="font-size: 16px; font-weight: bold; color: #FFEB3B;">${gate}</td>
+                            <td class="status">${status}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading flights: ${err.message}</td></tr>`;
+            }
+        }
+    </script>
+</body>
+</html>
