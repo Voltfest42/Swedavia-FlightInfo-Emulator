@@ -221,12 +221,12 @@ function generateForDate(dateString) {
 if (require.main === module) {
     const flights = [];
     const today = moment().startOf('day');
-    for (let dayOffset = -1; dayOffset <= 2; dayOffset++) {
+    for (let dayOffset = 0; dayOffset <= 0; dayOffset++) {
         const dateStr = moment(today).add(dayOffset, 'days').format('YYYY-MM-DD');
         flights.push(...generateForDate(dateStr));
     }
     fs.writeFileSync('mock_flights.json', JSON.stringify(flights, null, 2));
-    console.log(`Generated mock_flights.json with ${flights.length} realistically modeled flights.`);
+    console.log(`Generated mock_flights.json with ${flights.length} realistically modeled flights for today.`);
 }
 
 module.exports = { generateForDate };
