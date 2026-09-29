@@ -89,6 +89,83 @@
         .status {
             font-weight: bold;
         }
+
+        /* Boarding Pass Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .boarding-pass {
+            background-color: #f4f4f4;
+            color: #333;
+            width: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-family: monospace;
+        }
+        .bp-header {
+            background-color: #0078D4;
+            color: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .bp-header h3 {
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        .bp-body {
+            padding: 20px;
+        }
+        .bp-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .bp-label {
+            font-size: 10px;
+            color: #777;
+            text-transform: uppercase;
+        }
+        .bp-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #111;
+        }
+        .bp-large {
+            font-size: 24px;
+        }
+        .bp-barcode {
+            background-color: #fff;
+            padding: 15px;
+            text-align: center;
+            border-top: 1px dashed #ccc;
+            font-weight: bold;
+            letter-spacing: 4px;
+            font-size: 18px;
+        }
+        /* Make table rows clickable */
+        tr.clickable {
+            cursor: pointer;
+        }
+        tr.clickable:hover {
+            background-color: #2a2a2a;
+        }
     </style>
 </head>
 <body>
@@ -179,12 +256,110 @@
         </tbody>
     </table>
 
+    <!-- Boarding Pass Modal -->
+    <div id="bp-modal" class="modal-overlay" onclick="closeBoardingPass(event)">
+        <div class="boarding-pass" onclick="event.stopPropagation()">
+            <div class="bp-header">
+                <h3 id="bp-airline">Airline</h3>
+                <button class="close-btn" onclick="closeBoardingPass()">&times;</button>
+            </div>
+            <div class="bp-body">
+                <div class="bp-row">
+                    <div>
+                        <div class="bp-label">Passenger Name</div>
+                        <div class="bp-value">JOHN DOE</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="bp-label">Flight</div>
+                        <div class="bp-value" id="bp-flight">XX0000</div>
+                    </div>
+                </div>
+                <div class="bp-row">
+                    <div>
+                        <div class="bp-label">From</div>
+                        <div class="bp-value bp-large" id="bp-from">AAA</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="bp-label">To</div>
+                        <div class="bp-value bp-large" id="bp-to">BBB</div>
+                    </div>
+                </div>
+                <div class="bp-row">
+                    <div>
+                        <div class="bp-label">Boarding Time</div>
+                        <div class="bp-value" id="bp-time">00:00</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="bp-label">Gate</div>
+                        <div class="bp-value" id="bp-gate">A1</div>
+                    </div>
+                </div>
+                <div class="bp-row">
+                    <div>
+                        <div class="bp-label">Terminal</div>
+                        <div class="bp-value" id="bp-terminal">1</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="bp-label">Seat</div>
+                        <div class="bp-value" id="bp-seat">1A</div>
+                    </div>
+                </div>
+            </div>
+            <div class="bp-barcode">
+                || | ||| | || ||| | || |
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'http://localhost:3000/flightinfo/v2';
         let currentFlights = []; // Store globally for client-side filtering
 
         // Set default date to today
         document.getElementById('date-input').valueAsDate = new Date();
+
+        function closeBoardingPass(e) {
+            document.getElementById('bp-modal').style.display = 'none';
+        }
+
+        function showBoardingPass(flightId) {
+            const flight = currentFlights.find(f => f.flightId === flightId);
+            if (!flight) return;
+
+            document.getElementById('bp-airline').innerText = flight.airlineOperator.name;
+            document.getElementById('bp-flight').innerText = flight.flightId;
+            
+            const isDeparture = !!flight.departureTime;
+            const mainAirportIata = flight.arrivalAirportEnglish ? flight.departureAirportEnglish : flight.arrivalAirportEnglish; 
+            // wait, we don't have the current airport IATA directly in the flight response under root easily. 
+            // We can just use the dropdown value.
+            const airportCode = document.getElementById('airport-select').value;
+            const otherCity = flight.arrivalAirportEnglish || flight.departureAirportEnglish || 'Unknown';
+            const otherIata = flight.arrivalAirportIata || flight.departureAirportIata || otherCity.substring(0,3).toUpperCase();
+            
+            if (isDeparture) {
+                document.getElementById('bp-from').innerText = airportCode;
+                document.getElementById('bp-to').innerText = otherIata;
+            } else {
+                document.getElementById('bp-from').innerText = otherIata;
+                document.getElementById('bp-to').innerText = airportCode;
+            }
+
+            const timeObj = flight.departureTime || flight.arrivalTime;
+            const schedDate = new Date(timeObj.scheduledUtc);
+            // Boarding time is usually 30-40 mins before departure
+            schedDate.setMinutes(schedDate.getMinutes() - 35);
+            document.getElementById('bp-time').innerText = schedDate.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+
+            document.getElementById('bp-gate').innerText = flight.locationAndStatus.gate || 'TBD';
+            document.getElementById('bp-terminal').innerText = flight.locationAndStatus.terminal || '-';
+
+            const letters = ['A','B','C','D','E','F'];
+            const randomSeat = (Math.floor(Math.random() * 30) + 1) + letters[Math.floor(Math.random() * letters.length)];
+            document.getElementById('bp-seat').innerText = randomSeat;
+
+            document.getElementById('bp-modal').style.display = 'flex';
+        }
 
         // 1. Heartbeat Polling
         async function checkHeartbeat() {
@@ -303,7 +478,7 @@
                 const statusColor = getStatusColor(status);
 
                 return `
-                    <tr>
+                    <tr class="clickable" onclick="showBoardingPass('${f.flightId}')">
                         <td style="font-size: 18px; font-weight: bold;">${time}</td>
                         <td>${f.flightId}</td>
                         <td class="airline-logo">${airline}</td>
