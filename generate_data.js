@@ -19,12 +19,17 @@ const AIRLINES = {
 };
 
 const DESTINATIONS = {
+    'ARN': { iata: 'ARN', swedish: 'Stockholm Arlanda', english: 'Stockholm' },
+    'GOT': { iata: 'GOT', swedish: 'Göteborg Landvetter', english: 'Gothenburg' },
+    'BMA': { iata: 'BMA', swedish: 'Stockholm Bromma', english: 'Bromma' },
     'UME': { iata: 'UME', swedish: 'Umeå', english: 'Umea' },
     'LLA': { iata: 'LLA', swedish: 'Luleå', english: 'Lulea' },
     'MMX': { iata: 'MMX', swedish: 'Malmö', english: 'Malmo' },
     'OSD': { iata: 'OSD', swedish: 'Östersund', english: 'Ostersund' },
     'KRN': { iata: 'KRN', swedish: 'Kiruna', english: 'Kiruna' },
     'AGH': { iata: 'AGH', swedish: 'Ängelholm', english: 'Angelholm' },
+    'VBY': { iata: 'VBY', swedish: 'Visby', english: 'Visby' },
+    'RNB': { iata: 'RNB', swedish: 'Ronneby', english: 'Ronneby' },
     'LHR': { iata: 'LHR', swedish: 'London', english: 'London' },
     'STN': { iata: 'STN', swedish: 'London', english: 'London' },
     'CPH': { iata: 'CPH', swedish: 'Köpenhamn', english: 'Copenhagen' },
@@ -72,7 +77,70 @@ const AIRPORT_PROFILES = {
             { id: 'TF', weight: 80 },
             { id: 'AY', weight: 10 }
         ],
-        destinations: ['UME', 'MMX', 'AGH', 'OSD', 'HEL']
+        destinations: ['UME', 'MMX', 'AGH', 'OSD', 'HEL', 'VBY', 'RNB']
+    },
+    'MMX': {
+        name: 'Malmö Airport',
+        dailyFlights: 20,
+        terminals: ['1'],
+        airlines: [
+            { id: 'W6', weight: 40 }, { id: 'FR', weight: 30 }, { id: 'SK', weight: 15 }, { id: 'TF', weight: 15 }
+        ],
+        destinations: ['ARN', 'BMA', 'STN', 'CPH', 'ALC', 'AGP']
+    },
+    'LLA': {
+        name: 'Luleå Airport',
+        dailyFlights: 15,
+        terminals: ['1'],
+        airlines: [
+            { id: 'SK', weight: 50 }, { id: 'DY', weight: 40 }, { id: 'FR', weight: 10 }
+        ],
+        destinations: ['ARN', 'GOT']
+    },
+    'UME': {
+        name: 'Umeå Airport',
+        dailyFlights: 15,
+        terminals: ['1'],
+        airlines: [
+            { id: 'SK', weight: 40 }, { id: 'DY', weight: 30 }, { id: 'TF', weight: 30 }
+        ],
+        destinations: ['ARN', 'BMA', 'GOT']
+    },
+    'OSD': {
+        name: 'Åre Östersund Airport',
+        dailyFlights: 5,
+        terminals: ['1'],
+        airlines: [
+            { id: 'SK', weight: 60 }, { id: 'TF', weight: 40 }
+        ],
+        destinations: ['ARN', 'BMA']
+    },
+    'VBY': {
+        name: 'Visby Airport',
+        dailyFlights: 10,
+        terminals: ['1'],
+        airlines: [
+            { id: 'TF', weight: 50 }, { id: 'SK', weight: 40 }, { id: 'FR', weight: 10 }
+        ],
+        destinations: ['ARN', 'BMA', 'GOT']
+    },
+    'RNB': {
+        name: 'Ronneby Airport',
+        dailyFlights: 4,
+        terminals: ['1'],
+        airlines: [
+            { id: 'TF', weight: 50 }, { id: 'SK', weight: 50 }
+        ],
+        destinations: ['ARN', 'BMA']
+    },
+    'KRN': {
+        name: 'Kiruna Airport',
+        dailyFlights: 4,
+        terminals: ['1'],
+        airlines: [
+            { id: 'SK', weight: 70 }, { id: 'DY', weight: 30 }
+        ],
+        destinations: ['ARN', 'UME']
     }
 };
 
