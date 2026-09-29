@@ -87,7 +87,7 @@
             color: #FFB900;
         }
         .status {
-            color: #4CAF50;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -193,6 +193,19 @@
                     return;
                 }
 
+                function getStatusColor(status) {
+                    switch(status) {
+                        case 'Landed':
+                        case 'Departed': return '#aaaaaa'; // light gray
+                        case 'Scheduled': return '#ffffff'; // white
+                        case 'Delayed': return '#ff9800'; // orange
+                        case 'Cancelled': return '#f44336'; // red
+                        case 'Boarding': return '#2196f3'; // blue
+                        case 'Go to gate': return '#4caf50'; // green
+                        default: return '#ffffff';
+                    }
+                }
+
                 tbody.innerHTML = flights.map(f => {
                     const timeObj = f.departureTime || f.arrivalTime;
                     const time = new Date(timeObj.scheduledUtc).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
@@ -202,6 +215,7 @@
                     const terminal = f.locationAndStatus.terminal || '-';
                     const gate = f.locationAndStatus.gate || '-';
                     const status = f.locationAndStatus.flightLegStatusEnglish;
+                    const statusColor = getStatusColor(status);
 
                     return `
                         <tr>
@@ -211,7 +225,7 @@
                             <td style="font-size: 16px;">${city}</td>
                             <td>T${terminal}</td>
                             <td style="font-size: 16px; font-weight: bold; color: #FFEB3B;">${gate}</td>
-                            <td class="status">${status}</td>
+                            <td class="status" style="color: ${statusColor};">${status}</td>
                         </tr>
                     `;
                 }).join('');
