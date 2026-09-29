@@ -129,6 +129,28 @@
             <option value="QR">Qatar Airways (QR)</option>
         </select>
 
+        <select id="city-select" onchange="renderFlights()">
+            <option value="ALL">All Destinations</option>
+            <option value="Umea">Umeå</option>
+            <option value="Lulea">Luleå</option>
+            <option value="Malmo">Malmö</option>
+            <option value="Ostersund">Östersund</option>
+            <option value="Kiruna">Kiruna</option>
+            <option value="Angelholm">Ängelholm</option>
+            <option value="London">London</option>
+            <option value="Copenhagen">Copenhagen</option>
+            <option value="Oslo">Oslo</option>
+            <option value="Helsinki">Helsinki</option>
+            <option value="Frankfurt">Frankfurt</option>
+            <option value="Munich">Munich</option>
+            <option value="Amsterdam">Amsterdam</option>
+            <option value="Paris">Paris</option>
+            <option value="Alicante">Alicante</option>
+            <option value="Malaga">Málaga</option>
+            <option value="Dubai">Dubai</option>
+            <option value="Doha">Doha</option>
+        </select>
+
         <input type="date" id="date-input">
         
         <input type="time" id="time-start" onchange="renderFlights()" title="Start Time">
@@ -233,6 +255,7 @@
         function renderFlights() {
             const tbody = document.getElementById('flights-body');
             const airlineFilter = document.getElementById('airline-select').value;
+            const cityFilter = document.getElementById('city-select').value;
             const timeStart = document.getElementById('time-start').value;
             const timeEnd = document.getElementById('time-end').value;
             
@@ -240,6 +263,13 @@
             
             if (airlineFilter !== 'ALL') {
                 flightsToRender = flightsToRender.filter(f => f.airlineOperator.iata === airlineFilter);
+            }
+
+            if (cityFilter !== 'ALL') {
+                flightsToRender = flightsToRender.filter(f => {
+                    const city = f.arrivalAirportEnglish || f.departureAirportEnglish;
+                    return city === cityFilter;
+                });
             }
 
             if (timeStart || timeEnd) {
