@@ -5,14 +5,32 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 
+const { generateForDate } = require('./generate_data.js');
+
 // Helper to load flights dynamically
-function loadFlights() {
+function getFlightsForDate(airport, type, targetDate) {
+    let allFlights = [];
     try {
-        return JSON.parse(fs.readFileSync('mock_flights.json', 'utf8'));
+        allFlights = JSON.parse(fs.readFileSync('mock_flights.json', 'utf8'));
     } catch (err) {
-        console.error("Could not load mock_flights.json. Run 'node generate_data.js' first.");
-        return [];
+        console.error("Could not load mock_flights.json. Creating fresh array.");
     }
+
+    // Check if we have flights for this exact date
+    const hasData = allFlights.some(f => f.date === targetDate);
+    
+    if (!hasData) {
+        console.log(`No data found for ${targetDate}. Generating dynamically...`);
+        const newFlights = generateForDate(targetDate);
+        allFlights = allFlights.concat(newFlights);
+        fs.writeFileSync('mock_flights.json', JSON.stringify(allFlights, null, 2));
+    }
+
+    return allFlights.filter(f => 
+        f.airport.toUpperCase() === airport.toUpperCase() && 
+        f.date === targetDate && 
+        f.type === type
+    );
 }
 
 // Helper to calculate dynamic status based on real-world time
@@ -74,14 +92,9 @@ function computeDynamicStatus(flight, now) {
 // 1. Departures Endpoint
 app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
     const { airportIATA, date } = req.params;
-    const allFlights = loadFlights();
     const now = new Date();
     
-    const flights = allFlights.filter(f => 
-        f.airport.toUpperCase() === airportIATA.toUpperCase() && 
-        f.date === date && 
-        f.type === 'DEPARTURE'
-    );
+    const flights = getFlightsForDate(airportIATA, 'DEPARTURE', date);
 
     const response = {
         from: {
@@ -120,14 +133,9 @@ app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
 // 2. Arrivals Endpoint
 app.get('/flightinfo/v2/:airportIATA/Arrivals/:date', (req, res) => {
     const { airportIATA, date } = req.params;
-    const allFlights = loadFlights();
     const now = new Date();
     
-    const flights = allFlights.filter(f => 
-        f.airport.toUpperCase() === airportIATA.toUpperCase() && 
-        f.date === date && 
-        f.type === 'ARRIVAL'
-    );
+    const flights = getFlightsForDate(airportIATA, 'ARRIVAL', date);
 
     const response = {
         to: {
