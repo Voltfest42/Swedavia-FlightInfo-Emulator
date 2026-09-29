@@ -113,6 +113,22 @@
             <option value="Arrivals">Arrivals</option>
         </select>
 
+        <select id="airline-select" onchange="renderFlights()">
+            <option value="ALL">All Airlines</option>
+            <option value="SK">Scandinavian Airlines (SK)</option>
+            <option value="DY">Norwegian (DY)</option>
+            <option value="FR">Ryanair (FR)</option>
+            <option value="TF">BRA (TF)</option>
+            <option value="LH">Lufthansa (LH)</option>
+            <option value="KL">KLM (KL)</option>
+            <option value="AY">Finnair (AY)</option>
+            <option value="AF">Air France (AF)</option>
+            <option value="BA">British Airways (BA)</option>
+            <option value="W6">Wizz Air (W6)</option>
+            <option value="EK">Emirates (EK)</option>
+            <option value="QR">Qatar Airways (QR)</option>
+        </select>
+
         <input type="date" id="date-input">
         
         <button onclick="fetchFlights()">Load Flights</button>
@@ -139,6 +155,7 @@
 
     <script>
         const API_BASE = 'http://localhost:3000/flightinfo/v2';
+        let currentFlights = []; // Store globally for client-side filtering
 
         // Set default date to today
         document.getElementById('date-input').valueAsDate = new Date();
@@ -163,7 +180,7 @@
         setInterval(checkHeartbeat, 5000);
         checkHeartbeat(); // initial check
 
-        // 2. Fetch and render flights
+        // 2. Fetch flights from API
         async function fetchFlights() {
             const airport = document.getElementById('airport-select').value;
             const direction = document.getElementById('direction-select').value;
@@ -181,58 +198,72 @@
                 
                 const data = await response.json();
                 
-                // Sort flights by time
-                const flights = data.flights.sort((a, b) => {
+                // Sort flights by time and store globally
+                currentFlights = data.flights.sort((a, b) => {
                     const timeA = a.departureTime ? a.departureTime.scheduledUtc : a.arrivalTime.scheduledUtc;
                     const timeB = b.departureTime ? b.departureTime.scheduledUtc : b.arrivalTime.scheduledUtc;
                     return new Date(timeA) - new Date(timeB);
                 });
 
-                if (flights.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No flights found for this date.</td></tr>';
-                    return;
-                }
-
-                function getStatusColor(status) {
-                    switch(status) {
-                        case 'Landed':
-                        case 'Departed': return '#aaaaaa'; // light gray
-                        case 'Scheduled': return '#ffffff'; // white
-                        case 'Delayed': return '#ff9800'; // orange
-                        case 'Cancelled': return '#f44336'; // red
-                        case 'Boarding': return '#2196f3'; // blue
-                        case 'Go to gate': return '#4caf50'; // green
-                        default: return '#ffffff';
-                    }
-                }
-
-                tbody.innerHTML = flights.map(f => {
-                    const timeObj = f.departureTime || f.arrivalTime;
-                    const time = new Date(timeObj.scheduledUtc).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
-                    
-                    const city = f.arrivalAirportEnglish || f.departureAirportEnglish || 'Unknown';
-                    const airline = f.airlineOperator.name;
-                    const terminal = f.locationAndStatus.terminal || '-';
-                    const gate = f.locationAndStatus.gate || '-';
-                    const status = f.locationAndStatus.flightLegStatusEnglish;
-                    const statusColor = getStatusColor(status);
-
-                    return `
-                        <tr>
-                            <td style="font-size: 18px; font-weight: bold;">${time}</td>
-                            <td>${f.flightId}</td>
-                            <td class="airline-logo">${airline}</td>
-                            <td style="font-size: 16px;">${city}</td>
-                            <td>T${terminal}</td>
-                            <td style="font-size: 16px; font-weight: bold; color: #FFEB3B;">${gate}</td>
-                            <td class="status" style="color: ${statusColor};">${status}</td>
-                        </tr>
-                    `;
-                }).join('');
+                renderFlights();
 
             } catch (err) {
                 tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red;">Error loading flights: ${err.message}</td></tr>`;
             }
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'Landed':
+                case 'Departed': return '#aaaaaa';
+                case 'Scheduled': return '#ffffff';
+                case 'Delayed': return '#ff9800';
+                case 'Cancelled': return '#f44336';
+                case 'Boarding': return '#2196f3';
+                case 'Go to gate': return '#4caf50';
+                default: return '#ffffff';
+            }
+        }
+
+        // 3. Render flights to table (with filtering)
+        function renderFlights() {
+            const tbody = document.getElementById('flights-body');
+            const airlineFilter = document.getElementById('airline-select').value;
+            
+            let flightsToRender = currentFlights;
+            
+            if (airlineFilter !== 'ALL') {
+                flightsToRender = flightsToRender.filter(f => f.airlineOperator.iata === airlineFilter);
+            }
+
+            if (flightsToRender.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No flights found for selected criteria.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = flightsToRender.map(f => {
+                const timeObj = f.departureTime || f.arrivalTime;
+                const time = new Date(timeObj.scheduledUtc).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                
+                const city = f.arrivalAirportEnglish || f.departureAirportEnglish || 'Unknown';
+                const airline = f.airlineOperator.name;
+                const terminal = f.locationAndStatus.terminal || '-';
+                const gate = f.locationAndStatus.gate || '-';
+                const status = f.locationAndStatus.flightLegStatusEnglish;
+                const statusColor = getStatusColor(status);
+
+                return `
+                    <tr>
+                        <td style="font-size: 18px; font-weight: bold;">${time}</td>
+                        <td>${f.flightId}</td>
+                        <td class="airline-logo">${airline}</td>
+                        <td style="font-size: 16px;">${city}</td>
+                        <td>T${terminal}</td>
+                        <td style="font-size: 16px; font-weight: bold; color: #FFEB3B;">${gate}</td>
+                        <td class="status" style="color: ${statusColor};">${status}</td>
+                    </tr>
+                `;
+            }).join('');
         }
     </script>
 </body>
