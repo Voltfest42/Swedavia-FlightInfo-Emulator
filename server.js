@@ -5,18 +5,20 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 
-// Load generated data
-let allFlights = [];
-try {
-    allFlights = JSON.parse(fs.readFileSync('mock_flights.json', 'utf8'));
-} catch (err) {
-    console.error("Could not load mock_flights.json. Run 'node generate_data.js' first.");
-    process.exit(1);
+// Helper to load flights dynamically so we don't have to restart the server if data changes
+function loadFlights() {
+    try {
+        return JSON.parse(fs.readFileSync('mock_flights.json', 'utf8'));
+    } catch (err) {
+        console.error("Could not load mock_flights.json. Run 'node generate_data.js' first.");
+        return [];
+    }
 }
 
 // 1. Departures Endpoint
 app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
     const { airportIATA, date } = req.params;
+    const allFlights = loadFlights();
     
     // Filter flights for this airport, date, and type
     const flights = allFlights.filter(f => 
@@ -59,6 +61,7 @@ app.get('/flightinfo/v2/:airportIATA/Departures/:date', (req, res) => {
 // 2. Arrivals Endpoint
 app.get('/flightinfo/v2/:airportIATA/Arrivals/:date', (req, res) => {
     const { airportIATA, date } = req.params;
+    const allFlights = loadFlights();
     
     // Filter flights for this airport, date, and type
     const flights = allFlights.filter(f => 
