@@ -5,7 +5,7 @@ This project is a fully functional, dynamically generated emulation of the Sweda
 ## Features
 - **Dynamic Real-Time Status Engine:** Flights automatically transition from "Scheduled" to "Go to Gate" to "Boarding" to "Departed" based on the server's real-time clock.
 - **Lazy-Loading Data Generator:** Never run out of data. If you query a date that hasn't been generated yet, the server automatically generates a massive payload of highly realistic, statistically accurate flights for that specific day in the background.
-- **Statistical Accuracy:** Data generation is modeled after actual Swedavia statistics for Arlanda (ARN), Landvetter (GOT), and Bromma (BMA), correctly weighting airlines, destinations, and rush-hour volume curves.
+- **Statistical Accuracy:** Data generation is modeled after actual Swedavia statistics for its airports, correctly weighting airlines, destinations, and rush-hour volume curves.
 - **FIDS Client Interface:** A highly responsive frontend dashboard with zero-latency client-side filtering (by Airline, Time Range, Destination, etc.) and interactive, randomly generated boarding passes.
 
 ## Installation & Setup
